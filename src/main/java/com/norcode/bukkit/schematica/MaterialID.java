@@ -1,4 +1,4 @@
-/* This file is part of Schematica.
+/* This file is part of Schematica.;
  * Copyright (C) 2013 metalhedd <https://github.com/andrepl/>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,7 @@ package com.norcode.bukkit.schematica;
 
 
 
-import net.minecraft.server.v1_6_R3.*;
+import net.minecraft.server.v1_7_R3.*;
 
 import java.util.HashMap;
 
@@ -185,10 +185,17 @@ public class MaterialID {
     public static final int ACTIVATOR_RAIL = 157;
     public static final int DROPPER = 158;
     public static final int STAINED_CLAY = 159;
+    public static final int STAINED_GLASS_PAINE = 160;
+    public static final int LEAVES_2 = 161;
+    public static final int LOG_2 = 162;
+    public static final int ACACIA_STAIRS = 163;
+    public static final int DARK_OAK_STAIRS = 164;
     public static final int HAY_BLOCK = 170;
     public static final int CARPET = 171;
     public static final int HARD_CLAY = 172;
     public static final int COAL_BLOCK = 173;
+    public static final int PACKED_ICE = 174;
+    public static final int DOUBLE_PLANT = 175;
     public static final int IRON_SPADE = 256;
     public static final int IRON_PICKAXE = 257;
     public static final int IRON_AXE = 258;
@@ -347,6 +354,7 @@ public class MaterialID {
     public static final int DIAMOND_BARDING = 419;
     public static final int LEASH = 420;
     public static final int NAMETAG = 421;
+    public static final int COMMAND_MINECART = 422;
     public static final int GOLD_RECORD = 2256;
     public static final int GREEN_RECORD = 2257;
     public static final int RECORD_3 = 2258;

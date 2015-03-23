@@ -19,27 +19,33 @@
 
 package com.norcode.bukkit.schematica;
 
-import net.minecraft.server.v1_6_R3.NBTBase;
-import net.minecraft.server.v1_6_R3.NBTCompressedStreamTools;
-import net.minecraft.server.v1_6_R3.NBTTagCompound;
-import net.minecraft.server.v1_6_R3.NBTTagInt;
-import net.minecraft.server.v1_6_R3.NBTTagList;
-import net.minecraft.server.v1_6_R3.TileEntity;
+import net.minecraft.server.v1_7_R3.NBTBase;
+import net.minecraft.server.v1_7_R3.NBTCompressedStreamTools;
+import net.minecraft.server.v1_7_R3.NBTTagCompound;
+import net.minecraft.server.v1_7_R3.NBTTagInt;
+import net.minecraft.server.v1_7_R3.NBTTagList;
+import net.minecraft.server.v1_7_R3.TileEntity;
 
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.craftbukkit.v1_6_R3.CraftWorld;
+import org.bukkit.craftbukkit.v1_7_R3.CraftWorld;
 import org.bukkit.util.BlockVector;
 import org.bukkit.util.Vector;
 
 import com.norcode.bukkit.schematica.exceptions.SchematicLoadException;
 import com.norcode.bukkit.schematica.exceptions.SchematicSaveException;
+import java.io.ByteArrayInputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Temporary storage for cuboid regions.
@@ -134,7 +140,7 @@ public class Clipboard {
      * @throws SchematicLoadException (actually doesn't yet)
      */
     public static Clipboard fromSchematic(byte[] input) throws SchematicLoadException {
-        NBTTagCompound tag = NBTCompressedStreamTools.a(input);
+        NBTTagCompound tag = NBTCompressedStreamTools.a(new ByteArrayInputStream(input));
         short width = tag.getShort("Width");
         short length = tag.getShort("Length");
         short height = tag.getShort("Height");
@@ -172,10 +178,10 @@ public class Clipboard {
         }
 
         // Need to pull out tile entities
-        NBTTagList tileEntities = tag.getList("TileEntities");
+        NBTTagList tileEntities = tag.getList("TileEntities", 10);
 
         Map<BlockVector, NBTTagCompound> tileEntitiesMap =
-                new HashMap<BlockVector, NBTTagCompound>();
+                new HashMap<>();
 
         NBTTagCompound cTag;
         for (int index=0;index<tileEntities.size();index++) {
@@ -187,15 +193,48 @@ public class Clipboard {
             int x = 0;
             int y = 0;
             int z = 0;
-            for (NBTBase v: (Collection<NBTBase>) cTag.c()) {
+            
+            Iterator iterator = cTag.c().iterator();
+            while (iterator.hasNext()) {
+                String name = (String) iterator.next();
+                NBTBase v = cTag.get(name);
+                
                 if (v instanceof NBTTagInt) {
                     NBTTagInt intTag = (NBTTagInt) v;
-                    if (v.getName().equals("x")) {
-                        x = intTag.data;
-                    } else if (v.getName().equals("y")) {
-                        y = intTag.data;
-                    } else if(v.getName().equals("z")) {
-                        z = intTag.data;
+                    
+                    // Class baseClass = v.getClass();
+                    Class intTagClass = intTag.getClass();
+                    Method m;
+                    Field f;
+                    
+                    try
+                    {
+                        // m = baseClass.getDeclaredMethod("a_");
+                        f = intTagClass.getDeclaredField("data");
+                    } catch(/*NoSuchMethodException | */NoSuchFieldException | SecurityException ex)
+                    {
+                        break;
+                    }
+                    
+                    // m.setAccessible(true);
+                    f.setAccessible(true);
+                    
+                    // String name;
+                    int tagData;
+                    
+                    try{
+                        // name = (String) m.invoke(v);
+                        tagData = f.getInt(intTag);
+                    } catch(IllegalAccessException | IllegalArgumentException/* | InvocationTargetException*/ ex){
+                        break;
+                    }
+                    
+                    if (name.equals("x")) {
+                        x = tagData;
+                    } else if (name.equals("y")) {
+                        y = tagData;
+                    } else if(name.equals("z")) {
+                        z = tagData;
                     }
                 }
             }
@@ -244,7 +283,7 @@ public class Clipboard {
             throw new SchematicSaveException("Length " + length + " exceeds max size of "  + MAX_SIZE);
         }
 
-        NBTTagCompound tag = new NBTTagCompound("Schematic");
+        NBTTagCompound tag = new NBTTagCompound(/*"Schematic"*/);
         tag.setShort("Width",  (short) width);
         tag.setShort("Length", (short) length);
         tag.setShort("Height", (short) height);
@@ -295,13 +334,13 @@ public class Clipboard {
 
         tag.setByteArray("Blocks", blocks);
         tag.setByteArray("Data", blockData);
-        tag.set("Entities", new NBTTagList("Entities"));
+        tag.set("Entities", new NBTTagList(/*"Entities"*/));
         tag.set("TileEntities", tileEntities);
         if (addBlocks != null) {
             tag.setByteArray("AddBlocks", addBlocks);
         }
         // Build and output
-        tag.setName("Schematic");
+        // tag.setName("Schematic");
         return NBTCompressedStreamTools.a(tag);
     }
 
@@ -475,7 +514,7 @@ public class Clipboard {
             CraftWorld cw = (CraftWorld) block.getWorld();
             TileEntity te = cw.getTileEntityAt(block.getX(), block.getY(), block.getZ());
             if (te != null) {
-                NBTTagCompound tag = new NBTTagCompound(MaterialID.getTileEntityId(block.getTypeId()));
+                NBTTagCompound tag = new NBTTagCompound(/*MaterialID.getTileEntityId(block.getTypeId())*/);
                 te.b(tag);
                 tag.setInt("x", x);
                 tag.setInt("y", y);
@@ -615,7 +654,7 @@ public class Clipboard {
         if (block.hasTag()) {
             TileEntity te;
             NBTTagCompound btag = (NBTTagCompound) block.getTag().clone();
-            btag.setName(MaterialID.getTileEntityId(block.getType()));
+            // btag.setName(MaterialID.getTileEntityId(block.getType()));
             btag.setInt("x", loc.getBlockX());
             btag.setInt("y", loc.getBlockY());
             btag.setInt("z", loc.getBlockZ());
