@@ -201,29 +201,23 @@ public class Clipboard {
                 
                 if (v instanceof NBTTagInt) {
                     NBTTagInt intTag = (NBTTagInt) v;
-                    
-                    // Class baseClass = v.getClass();
+
                     Class intTagClass = intTag.getClass();
-                    Method m;
                     Field f;
                     
                     try
                     {
-                        // m = baseClass.getDeclaredMethod("a_");
                         f = intTagClass.getDeclaredField("data");
-                    } catch(/*NoSuchMethodException | */NoSuchFieldException | SecurityException ex)
+                    } catch(NoSuchFieldException | SecurityException ex)
                     {
                         break;
                     }
                     
-                    // m.setAccessible(true);
                     f.setAccessible(true);
                     
-                    // String name;
                     int tagData;
                     
                     try{
-                        // name = (String) m.invoke(v);
                         tagData = f.getInt(intTag);
                     } catch(IllegalAccessException | IllegalArgumentException/* | InvocationTargetException*/ ex){
                         break;
